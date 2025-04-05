@@ -14,6 +14,7 @@ import { OrdersModule } from './components/orders/orders.module';
 import { VNPayModule } from './components/vnpay/vnpay.module';
 import { MailService } from './components/mail/mail.service';
 import { CouponModule } from './components/coupon/coupon.module';
+import { ChatGateway } from './components/chatgateway/chat.gateway';
 
 
 @Module({
@@ -39,6 +40,6 @@ import { CouponModule } from './components/coupon/coupon.module';
     CouponModule
     ],
   controllers: [],
-  providers: [MailService],
+  providers: [MailService,ChatGateway],
 })
 export class AppModule {}

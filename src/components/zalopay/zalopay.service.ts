@@ -38,7 +38,7 @@ export class ZaloPayService {
       amount,
       description: `Payment for order #${transID}`,
       bank_code: '',
-      callback_url:"https://5614-2405-4802-1cb9-1e00-5b1-2748-62ea-6f76.ngrok-free.app/zalopay/callback"
+      callback_url:"https://9492-2405-4802-1cb9-1e00-5d2f-6c19-e353-9af4.ngrok-free.app/zalopay/callback"
     };
 
     // Tạo chuỗi để hash
