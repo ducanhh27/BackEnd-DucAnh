@@ -15,6 +15,8 @@ import { VNPayModule } from './components/vnpay/vnpay.module';
 import { MailService } from './components/mail/mail.service';
 import { CouponModule } from './components/coupon/coupon.module';
 import { ChatGateway } from './components/chatgateway/chat.gateway';
+import { ChatMessageModule } from './components/chatgateway/chatmessages.module';
+import { ReviewsModule } from './components/review/reviews.modulte';
 
 
 @Module({
@@ -37,9 +39,11 @@ import { ChatGateway } from './components/chatgateway/chat.gateway';
     ZaloPayModule,
     OrdersModule,
     VNPayModule,
-    CouponModule
+    CouponModule,
+    ChatMessageModule,
+    ReviewsModule
     ],
   controllers: [],
-  providers: [MailService,ChatGateway],
+  providers: [MailService],
 })
 export class AppModule {}

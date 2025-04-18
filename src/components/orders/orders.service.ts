@@ -19,7 +19,7 @@ export class OrdersService {
 
   async createOrder(dto: CreateOrderDto) {
     const newOrder = new this.orderModel({
-      customerId: dto.customerId ? new Types.ObjectId(dto.customerId) : null,
+      customerId: dto.customerId ,
       name: dto.name,
       phone: dto.phone,
       email: dto.email,
@@ -197,6 +197,6 @@ export class OrdersService {
 
     //Lay don hang theo id
    async getOrderUser (userId: string){
-      return await this.orderModel.find({customerId:new Types.ObjectId(userId) }).exec()
+      return await this.orderModel.find({customerId:userId }).exec()
    }
 }

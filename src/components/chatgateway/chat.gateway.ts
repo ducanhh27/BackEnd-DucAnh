@@ -6,6 +6,8 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
+import { MessageService } from './message.service';
+import { Inject } from '@nestjs/common';
 
 @WebSocketGateway(3002, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
@@ -14,6 +16,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
   private users = new Map<string, { socketId: string;userName:string; role: string }>();
   private adminId: string | null = null;
+  constructor(
+    @Inject(MessageService)
+    private readonly messageService: MessageService,
+  ) {}
+
 
   handleConnection(client: Socket) {
     const userId = client.handshake.query.userId as string;
@@ -68,7 +75,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('privateMessage')
-  handlePrivateMessage(client: Socket, payload: { to: string; text: string }) {
+  async handlePrivateMessage(client: Socket, payload: { to: string; text: string }) {
     const sender = [...this.users.entries()].find(
       ([, user]) => user.socketId === client.id
     );
@@ -82,9 +89,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (adminSocketId) {
         this.server.to(adminSocketId).emit('message', {
           senderId,
+          senderName: senderData.userName,
           text: payload.text,
         });
         console.log(`📩 Client ${senderId} gửi tin nhắn: ${payload.text}`);
+
+        // 👇 Lưu vào MongoDB
+      await this.messageService.saveMessage({
+        senderId,
+        senderName: senderData.userName,
+        receiverId: 'admin',
+        text: payload.text,
+        senderRole: 'client',
+      });
       }
     } else if (senderData.role === 'admin') {
       // Admin gửi tin nhắn cho một Client
@@ -94,17 +111,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           senderId: 'admin',
           text: payload.text,
         });
+        await this.messageService.saveMessage({
+          senderId: 'admin',
+          senderName: senderData.userName,
+          receiverId: payload.to,
+          text: payload.text,
+          senderRole: 'admin',
+        });
         console.log(`📩 Admin gửi tin nhắn tới ${payload.to}: ${payload.text}`);
       }
     }
   }
   @SubscribeMessage('adminMessage')
-  handleAdminMessage(client: Socket, payload: { to: string; text: string }) {
-  const sender = [...this.users.entries()].find(
+async handleAdminMessage(client: Socket, payload: { to: string; text: string }) {
+  const senderEntry = [...this.users.entries()].find(
     ([, user]) => user.socketId === client.id
   );
 
-  if (!sender || sender[1].role !== 'admin') return;
+  if (!senderEntry || senderEntry[1].role !== 'admin') return;
+
+  const [senderId, senderData] = senderEntry;
 
   const recipientSocketId = this.users.get(payload.to)?.socketId;
   if (recipientSocketId) {
@@ -112,6 +138,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       senderId: 'admin',
       text: payload.text,
     });
+
+    await this.messageService.saveMessage({
+      senderId: 'admin',
+      senderName: senderData.userName,
+      receiverId: payload.to,
+      text: payload.text,
+      senderRole: 'admin',
+    });
+
     console.log(`📩 Admin gửi tin nhắn tới ${payload.to}: ${payload.text}`);
   }
 }
