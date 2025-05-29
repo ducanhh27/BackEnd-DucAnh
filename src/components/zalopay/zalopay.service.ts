@@ -8,6 +8,7 @@ import { Cart } from 'src/schema/cart/cart.schema';
 import { Orders } from 'src/schema/order/orders.schema';
 import { Product } from 'src/schema/products/products.schema';
 import { Users } from 'src/schema/users/users.schema';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class ZaloPayService {
@@ -38,7 +39,7 @@ export class ZaloPayService {
       amount,
       description: `Payment for order #${transID}`,
       bank_code: '',
-      callback_url:"https://9492-2405-4802-1cb9-1e00-5d2f-6c19-e353-9af4.ngrok-free.app/zalopay/callback"
+      callback_url:"https://2369-2405-4802-1d7e-d200-b4be-b08-dafd-247a.ngrok-free.app/zalopay/callback"
     };
 
     // Tạo chuỗi để hash
@@ -85,11 +86,12 @@ export class ZaloPayService {
             return null;
           }
           return {
-            _id: product._id,
+             _id: (product._id as Types.ObjectId).toString(),
             name: product.name,
             price: product.price,
             thumbnail: product.thumbnail,
             categories: product.categories,
+            slug:product.slug,
             quantity: item.quantity,
             createdAt: product.createdAt,
             updatedAt: product.updatedAt,
@@ -127,7 +129,7 @@ export class ZaloPayService {
   
       // Cập nhật số lượng bán được và số lượng trong kho
       for (const item of newOrder.items) {
-        const product = await this.productModel.findById(item.productId);
+        const product = await this.productModel.findById(item._id);
         if (product) {
           product.sold = (product.sold ?? 0) + item.quantity;
           product.stockQuantity -= item.quantity;

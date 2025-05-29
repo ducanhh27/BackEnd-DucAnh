@@ -19,9 +19,6 @@ export class Category extends BaseModel {
     @Prop({type:String,unique: true, required: false})
     slug:string;
 
-    @Prop({type:String, required: false})
-    description:string;
-
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

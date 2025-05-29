@@ -22,7 +22,8 @@ import { AuthGuard } from '../auth/guards/auth.guard';
     @Post()
     @UseGuards(AuthGuard) 
     async createReview(@Body() dto: CreateReviewDto, @Req() req: any) {
-      const userId = req.user._id;
+      const userId = req.user.userId;
+      console.log(dto,"đây")
       return this.reviewService.createReview(dto, userId);
     }
   
@@ -31,24 +32,23 @@ import { AuthGuard } from '../auth/guards/auth.guard';
     async getProductReviews(
       @Param('productId') productId: string,
       @Query('page') page = 1,
-      @Query('limit') limit = 10,
+      @Query('limit') limit = 8,
     ) {
       return this.reviewService.getProductReviews(productId, +page, +limit);
     }
-  
-    // Lấy đánh giá của user cho 1 sản phẩm trong 1 đơn hàng
-    @Get('me')
-    @UseGuards(AuthGuard) 
-    async getUserReview(
-      @Req() req: any,
-      @Query('productId') productId: string,
-      @Query('orderId') orderId: string,
-    ) {
-      const userId = req.user._id;
-      if (!productId || !orderId) {
-        throw new BadRequestException('Thiếu productId hoặc orderId');
-      }
-      return this.reviewService.getUserReview(userId, productId, orderId);
-    }
+  @Get('product/:id/summary')
+  getReviewSummary(@Param('id') productId: string) {
+    return this.reviewService.getProductReviewSummary(productId);
   }
+    
+  @Get('hasAdditionalReview/:userId/:orderId')
+  async hasAdditionalReview(
+    @Param('userId') userId: string,
+    @Param('orderId') orderId: string,
+  ) {
+    const result = await this.reviewService.hasUserAdditionalReview(userId, orderId);
+    return { hasAdditionalReview: result }; // Trả về kết quả có review bổ sung hay không
+  }
+  }
+  
   

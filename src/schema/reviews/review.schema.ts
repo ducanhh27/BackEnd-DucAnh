@@ -7,23 +7,23 @@ import { Orders } from '../order/orders.schema';
 
 @Schema({ timestamps: true })
 export class Reviews extends BaseModel {
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Users.name, required: true })
     user: Users;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'products', required: true })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Product.name, required: true })
      product: Product;
 
-     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'orders', required: true })
+     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: Orders.name, required: true })
      order: Orders;
     
      @Prop({ enum: ['initial', 'additional'], default: 'initial' })
      type: 'initial' | 'additional';
 
-     @Prop({ required: true, min: 1, max: 5 })
+     @Prop({ type: Number, required: true }) // ✅ BẮT BUỘC phải có
      rating: number;
-     
+
      @Prop()
-     comment: string;
+     comment?: string;
 
 }
 

@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LogInDto, SignUpDto } from 'src/dto/users/users.dto';
+import { LogInDto, SignUpDto, UpdateUserDto } from 'src/dto/users/users.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { MailService } from '../mail/mail.service';
 
@@ -20,6 +20,13 @@ export class AuthController {
   async infoUser(@Req() req) {
     const userId = req.user.userId;
     return this.AuthService.getUserById(userId);
+  }
+
+  @Put('update')
+  @UseGuards(AuthGuard)
+  async updateUser(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+    const userId = req.user.userId; // lấy userId từ payload JWT
+    return this.AuthService.updateUser(userId, updateUserDto);
   }
   @Post('login')
   async login(@Body() logIn: LogInDto) {
@@ -45,4 +52,10 @@ export class AuthController {
   async gettotaluser() {
     return this.AuthService.gettotaluser();
   }
+
+  @Get('users-with-total-paid')
+  async getUsersWithTotalPaid() {
+    return this.AuthService.getUserListWithTotalPaid();
+  }
+  
 }

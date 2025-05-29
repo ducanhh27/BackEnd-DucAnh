@@ -6,12 +6,14 @@ import { Orders } from "src/schema/order/orders.schema";
 import { Types } from "mongoose";
 import moment from "moment";
 import { Cart } from "src/schema/cart/cart.schema";
+import { Product } from "src/schema/products/products.schema";
 
 @Injectable()
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
   constructor(@InjectModel(Orders.name) private readonly orderModel: Model< Orders>,
-              @InjectModel(Cart.name) private cartModel: Model<Cart>) {}
+              @InjectModel(Cart.name) private cartModel: Model<Cart>,
+              @InjectModel(Product.name) private productModel: Model<Product>) {}
 
   async getAllOrders(): Promise<Orders[]> {
     return this.orderModel.find().sort({ createdAt: -1 }).exec();
@@ -19,7 +21,8 @@ export class OrdersService {
 
   async createOrder(dto: CreateOrderDto) {
     const newOrder = new this.orderModel({
-      customerId: dto.customerId ,
+      customerId: dto.customerId,
+      couponId:dto.couponId,
       name: dto.name,
       phone: dto.phone,
       email: dto.email,
@@ -28,14 +31,35 @@ export class OrdersService {
         ...item,
         totalPrice: item.price * item.quantity,
       })),
-      priceOders:dto.priceOders,
+      priceOders: dto.priceOders,
       status: dto.status,
-      deliveryStatus:dto.deliveryStatus,
-      paymentMethod:dto.paymentMethod 
+      deliveryStatus: dto.deliveryStatus,
+      paymentMethod: dto.paymentMethod,
     });
-    await this.cartModel.deleteOne({ userId:dto.customerId });
+  
+    // ✅ Cập nhật số lượng tồn kho và số lượng đã bán
+    for (const item of dto.items) {
+      await this.productModel.findByIdAndUpdate(
+        item._id,
+        {
+          $inc: {
+            stockQuantity: -item.quantity,
+            sold: item.quantity,
+          },
+        },
+        { new: true }
+        
+      );
+      console.log("gọi hàm này!")
+    }
+  
+    // ✅ Xoá giỏ hàng
+    await this.cartModel.deleteOne({ userId: dto.customerId });
+  
     return await newOrder.save();
   }
+
+
   async getOrderStatus(appTransId: string) {
     const order = await this.orderModel.findOne({ app_trans_id: appTransId });
     if (!order) {
@@ -191,6 +215,22 @@ export class OrdersService {
       order.status = "Đã thanh toán";
     }
 
+    if (deliveryStatus === "Hủy đơn hàng") {
+      for (const item of order.items) {
+        const productId = item._id; // _id này là của product luôn
+        const quantity = item.quantity;
+    
+        const product = await this.productModel.findById(productId);
+        if (product) {
+          product.stockQuantity += quantity;
+          product.sold = Math.max(0, (product.sold || 0) - quantity);
+          await product.save();
+        }
+      }
+  
+      // Nếu cần cập nhật luôn trạng thái thanh toán
+      order.status = "Đã hủy";
+    }
     await order.save();
     return order;
   }

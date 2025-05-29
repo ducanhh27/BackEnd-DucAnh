@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { Order } from '../orders/order.interface';
 import { Product } from 'src/schema/products/products.schema';
 import { Users } from 'src/schema/users/users.schema';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class VNPayService {
@@ -118,11 +119,12 @@ export class VNPayService {
               return null;
             }
             return {
-              _id: product._id,
+              _id: (product._id as Types.ObjectId).toString(),
               name: product.name,
               price: product.price,
               thumbnail: product.thumbnail,
               categories: product.categories,
+              slug:product.slug,
               quantity: item.quantity,
               createdAt: product.createdAt,
               updatedAt: product.updatedAt,
@@ -130,7 +132,7 @@ export class VNPayService {
           })
         );
 
-        // 🛠 Loại bỏ sản phẩm không tìm thấy
+        // Loại bỏ sản phẩm không tìm thấy
         const filteredItems = detailedItems.filter((item) => item !== null);
         // Tạo đơn hàng mới từ giỏ hàng
         const user = await this.userModel.findById(userId);
@@ -151,7 +153,7 @@ export class VNPayService {
           items: filteredItems,
           priceOders: vnp_Params['vnp_Amount'] / 100, // VNPAY gửi amount * 100
           status: 'Đã thanh toán',
-          paymentMethod:"Zalopay",
+          paymentMethod:"Vnpay",
           deliveryStatus:'Chưa giao hàng'
         });
 
@@ -159,7 +161,7 @@ export class VNPayService {
 
         // Cập nhật số lượng bán được và số lượng trong kho
         for (const item of newOrder.items) {
-          const product = await this.productModel.findById(item.productId);
+          const product = await this.productModel.findById(item._id);
           if (product) {
             product.sold = (product.sold ?? 0) + item.quantity;
             product.stockQuantity -= item.quantity;

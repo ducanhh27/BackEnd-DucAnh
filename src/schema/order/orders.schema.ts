@@ -4,7 +4,7 @@ import { BaseModel } from 'src/core/model/base.model';
 
 class OrderItem {
     @Prop({type: Types.ObjectId, required: true, ref: 'Product'})
-    productId: Types.ObjectId;
+    _id: Types.ObjectId;
   
     @Prop({ required: true })
     productName: string;
@@ -32,6 +32,9 @@ export class Orders extends BaseModel {
     @Prop({type: Types.ObjectId, required: true, ref: 'Users'})
     customerId:string;
 
+    @Prop({type: Types.ObjectId, required: false, ref: 'Coupon'})
+    couponId:string;
+    
     @Prop({type:String, required: false})
     name:string;
 

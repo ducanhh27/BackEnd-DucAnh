@@ -4,13 +4,14 @@ import { Model } from "mongoose";
 import {v4 as uuidv4} from 'uuid';
 import { Users } from "src/schema/users/users.schema";
 import * as bcrypt from 'bcrypt'
-import { LogInDto, SignUpDto } from "src/dto/users/users.dto";
+import { LogInDto, SignUpDto, UpdateUserDto } from "src/dto/users/users.dto";
 import { JwtService } from "@nestjs/jwt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 const { nanoid } = require("nanoid");
 import { ResetTokenPassword } from "src/schema/refreshPasswordToken/refresh-token-password-schema";
 import { MailService } from "../mail/mail.service";
+import { Orders } from "src/schema/order/orders.schema";
 
 
 
@@ -18,12 +19,13 @@ import { MailService } from "../mail/mail.service";
 export class AuthService{
     private client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     constructor(@InjectModel(Users.name) private userModel:Model<Users>,
+    @InjectModel(Orders.name) private readonly orderModel: Model<Orders>,
     @InjectModel(ResetTokenPassword.name) private passwordResetModel: Model<ResetTokenPassword>,
     private readonly mailService: MailService,
     private jwtService: JwtService){}
 
     async signup (signUser:SignUpDto): Promise<Users> {
-        const {email,username,password,name,phone} = signUser
+        const {email,username,password,name,phone,address} = signUser
         const emailInUse= await this.userModel.findOne({email})
         if(emailInUse){
             throw new BadRequestException("Email already in use")
@@ -39,6 +41,7 @@ export class AuthService{
             username,
             email,
             phone,
+            address,
             password: hasedPassword
         });
         return createdUser.save();
@@ -160,4 +163,58 @@ export class AuthService{
       async gettotaluser(): Promise<number> {
         return this.userModel.countDocuments();
       }
+
+      //Cập nhật thông tin người dùng
+      async updateUser(userId: string, updateUserDto: UpdateUserDto) {
+        const user = await this.userModel.findById(userId);
+      
+        if (!user) {
+          throw new NotFoundException('Người dùng không tồn tại');
+        }
+      
+        // Cập nhật các trường
+        if (updateUserDto.name) user.name = updateUserDto.name;
+        if (updateUserDto.address) user.address = updateUserDto.address;
+        if (updateUserDto.phone) user.phone = updateUserDto.phone;
+      
+        // Nếu cập nhật password thì hash lại mật khẩu
+        if (updateUserDto.password) {
+          const hasedPassword= await bcrypt.hash(updateUserDto.password,10)
+          user.password = hasedPassword;
+        }
+      
+        await user.save();
+        return {
+          message: 'Cập nhật thông tin thành công',
+          user,
+        };
+      }
+      
+      async getUserListWithTotalPaid() {
+        const users = await this.userModel.find().lean();
+      
+        const results = await Promise.all(
+          users.map(async (user) => {
+            const orders = await this.orderModel
+              .find({ customerId: user._id.toString() })
+              .lean();
+      
+            const totalPaid = orders
+              .filter((order) => order.deliveryStatus === 'Đã giao hàng')
+              .reduce((sum, order) => sum + (order.priceOders || 0), 0); // sửa ở đây
+      
+            return {
+              name: user.name,
+              email: user.email,
+              address:user.address,
+              phone: user.phone,
+              totalOrders: orders.length,
+              totalPaid,
+            };
+          })
+        );
+      
+        return results;
+      }
+      
 }

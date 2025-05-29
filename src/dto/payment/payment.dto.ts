@@ -1,9 +1,9 @@
-import { IsString, IsNotEmpty, IsEmail, IsArray, IsEnum, IsMongoId, IsNumber } from "class-validator";
+import { IsString, IsNotEmpty, IsEmail, IsArray, IsEnum, IsMongoId, IsNumber, IsOptional } from "class-validator";
 import { Types } from "mongoose";
 
 class OrderItemDto {
   @IsMongoId()
-  productId: string;
+  _id: string;
 
   @IsString()
   @IsNotEmpty()
@@ -24,6 +24,9 @@ export class CreateOrderDto {
   @IsMongoId()
   customerId?: string;
 
+  @IsMongoId()
+  @IsOptional()
+  couponId?: string;
   
   @IsString()
   @IsNotEmpty()

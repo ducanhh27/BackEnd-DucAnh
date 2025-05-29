@@ -44,7 +44,7 @@ export class Product extends BaseModel {
     @Prop({ required: false })
     images: string[];
     
-    @Prop({ required: true })
+    @Prop({ required: false })
     normalizedName: string;
    
 }
@@ -59,9 +59,20 @@ const removeVietnameseTones = (str: string): string => {
 };
 
 ProductSchema.pre('save', function (next) {
-  this.normalizedName = removeVietnameseTones(this.name);
-  if (!this.slug) {
-    this.slug = slugify(this.name, { lower: true, strict: true });
+  const doc = this as any;
+
+  console.log('>> Trong pre-save:', doc);
+
+  if (!doc.name) {
+    return next(new Error('Product name is required to generate normalizedName'));
   }
+
+  doc.normalizedName = removeVietnameseTones(doc.name);
+
+  if (!doc.slug) {
+    doc.slug = slugify(doc.name, { lower: true, strict: true });
+  }
+
   next();
 });
+

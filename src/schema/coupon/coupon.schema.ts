@@ -22,11 +22,11 @@ export class Coupon extends BaseModel {
   @Prop({ default: 0 })
   minimum_orders: number;
 
-  @Prop({ required: true })
-  start_date: Date; // Ngày bắt đầu
+  @Prop({ required: false })
+  start_date: string; // Ngày bắt đầu
 
-  @Prop({ required: true })
-  end_date: Date; // Ngày kết thúc
+  @Prop({ required: false })
+  end_date: string; // Ngày kết thúc
 
   @Prop({ default: true })
   is_active: boolean; // Trạng thái hoạt động

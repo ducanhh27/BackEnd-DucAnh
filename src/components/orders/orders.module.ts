@@ -5,6 +5,7 @@ import { OrdersService } from './orders.service';
 import { Orders, OrdersSchema } from 'src/schema/order/orders.schema';
 import { ScheduleModule } from '@nestjs/schedule';
 import { Cart, CartSchema } from 'src/schema/cart/cart.schema';
+import { Product, ProductSchema } from 'src/schema/products/products.schema';
 
 @Module({
   imports: [
@@ -17,6 +18,10 @@ import { Cart, CartSchema } from 'src/schema/cart/cart.schema';
         name: Cart.name,
         schema: CartSchema,
       },
+      {
+        name:Product.name,
+        schema:ProductSchema
+      }
     ]),
     ScheduleModule.forRoot(),
   ],

@@ -11,6 +11,7 @@ import {
 export class CreateReviewDto {
 
   @IsMongoId()
+  @IsOptional()
   customerId: string;
 
   @IsMongoId()

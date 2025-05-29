@@ -13,12 +13,15 @@ export class CouponService {
 
   // 🎯 Tạo mã giảm giá mới
   async createCoupon(dto: CreateCouponDto): Promise<Coupon> {
-    const { code } = dto;
+    const { code,type,discount_value } = dto;
 
     // Kiểm tra trùng mã
     const existingCoupon = await this.couponModel.findOne({ code });
     if (existingCoupon) throw new BadRequestException('Mã giảm giá đã tồn tại');
-
+    
+    if (type === 'percentage' && (discount_value < 0 || discount_value > 100)) {
+      throw new BadRequestException('Giá trị phần trăm phải nằm trong khoảng từ 0 đến 100');
+    }
     return this.couponModel.create(dto);
   }
 
@@ -37,10 +40,12 @@ export class CouponService {
   // 🎯 Áp dụng mã giảm giá
   async applyCoupon(userId: string, dto: ApplyCouponDto) {
     const coupon = await this.couponModel.findOne({ code: dto.code, is_active: true });
-
+   
+    //Kiểm tra tính hợp lệ
     if (!coupon) {
-        throw new BadRequestException('Mã giảm giá không hợp lệ hoặc đã hết hạn');
+        throw new BadRequestException('Mã giảm giá không hợp lệ ');
     }
+    const now = new Date();
 
     // Kiểm tra số lượng đơn hàng của user (nếu có điều kiện)
     const orderCount = await this.orderModel.countDocuments({ user: userId });
@@ -59,7 +64,7 @@ export class CouponService {
         { $inc: { max_usage: -1 } } // Giảm max_usage đi 1
     );
 
-    return { message: 'Mã giảm giá hợp lệ', discount: coupon.discount_value,type:coupon.type };
+    return { message: 'Mã giảm giá hợp lệ', discount: coupon.discount_value,type:coupon.type, couponId:coupon._id };
 }
 
 
