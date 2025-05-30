@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Put, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LogInDto, SignUpDto, UpdateUserDto } from 'src/dto/users/users.dto';
+import { ForgotPasswordDto, LogInDto, ResetPasswordDto, SignUpDto, UpdateUserDto } from 'src/dto/users/users.dto';
 import { AuthGuard } from './guards/auth.guard';
 import { MailService } from '../mail/mail.service';
 
@@ -38,13 +38,13 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body() body: { email: string }) {
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
     console.log(body.email,"here")
     return this.AuthService.forgotPassword(body.email);
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() body: { token: string; newPassword: string }) {
+  async resetPassword(@Body() body: ResetPasswordDto) {
     return this.AuthService.resetPassword(body.token, body.newPassword);
   }
 

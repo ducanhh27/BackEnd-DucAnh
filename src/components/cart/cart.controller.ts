@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body,  UseGuards, Req } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { AddToCartDto } from 'src/dto/cart/cart.dto';
+import { AddToCartDto, RemoveFromCartDto } from 'src/dto/cart/cart.dto';
 
 
 @Controller('cart')
@@ -25,7 +25,7 @@ export class CartController {
   }
   @Post("remove")
   @UseGuards(AuthGuard)
-  async removeFromCart(@Req() req, @Body() body: { productId: string }) {
+  async removeFromCart(@Req() req, @Body() body: RemoveFromCartDto) {
   const userId = req.user.userId;
   return this.cartService.removeFromCart(userId, body.productId);
 }
